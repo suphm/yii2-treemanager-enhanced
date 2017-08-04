@@ -2,7 +2,7 @@
    var __tv = window[$('#' + __tvId).data('krajee-treeview')],
     $tree = $('#' + __tv.treeId),
     $detail = $('#' + __tv.detailId),
-    $btnCut = $('#' + __tv.toolbarId).find('.kv-cut');
+    $btnCut = $('#' + __tv.toolbarId).find('button.kv-cut');
 
   __tv.alertFadeDuration = 2000
 
@@ -10,6 +10,7 @@
   $btnCut.on('click', function() {
       this.disabled = true
       $(this).data('clipNode', $('#' + __tvId).data('clipNode'))
+      $('#'+ __tvId).data('clipNode', 0)
 
       // remove tooltip
       this.nextSibling && this.nextSibling.remove()
@@ -17,16 +18,16 @@
   })
 
   $('#' + __tvId).on('treeview.beforeselect',
-    function(event, key, jqXHR, settings) {
-      this.dataset.clipNode = key
-
+    function(event, key, jqXhr, xhrSettings) {
+      console.log(arguments)
+      $(this).data('clipNode', key)
       if ($btnCut.data('clipNode') > 0) {
-        move($btnCut.data('clipNode'), key)
-        $btnCut.data('clipNode', null)
+              move($btnCut.data('clipNode'), key)
+              $btnCut.data('clipNode', 0)
       }
   })
 
-  $('#'+ __tvId).on('treeview.selected', function(event, key, jqXHR, settings) {
+  $('#'+ __tvId).on('treeview.selected', function(event, key, data, success, jqXhr) {
       var $form = $('#' + __tvId + '-nodeform')
       var scrollTop = $tree.scrollTop()
       $form.prepend('<input name=tvScrollTop value='+ scrollTop +' type=hidden>')
