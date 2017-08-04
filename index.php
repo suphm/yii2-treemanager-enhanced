@@ -1,5 +1,4 @@
 <?php //dist/views/tree/index.php
-use kartik\tree\TreeView;
 
 ?>
 <br>

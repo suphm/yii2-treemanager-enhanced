@@ -10,7 +10,7 @@ class Node extends \kartik\tree\models\Tree
     }
 
     public function afterSave($isInsert, $changedAttributes) {
-        Yii::$app->session['treeViewScrollTop'] = Yii::$app->request->post('treeViewScrollTop');
+        Yii::$app->session['tvScrollTop'] = Yii::$app->request->post('tvScrollTop');
 
         parent::afterSave($isInsert, $changedAttributes);
     }

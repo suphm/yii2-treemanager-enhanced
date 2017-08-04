@@ -1,117 +1,30 @@
 <?php //ext/tree/TreeView.php
 namespace app\ext\tree;
 
+use yii\helpers\Url;
 use yii\helpers\Html;
 use Yii;
-use yii\helpers\Url;
 
 class TreeView extends \kartik\tree\TreeView
 {
+    public function getActions() {
+        return [
+            'move' => Url::toRoute('tree/move'),
+        ];
+    }
+
     public function init() {
         parent::init();
 
-//        $this->view->registerAssetBundle(TreeViewAsset::className());
-//        $this->view->assetBundles['kartik\tree\TreeViewAsset']->js = [];
+        $this->view->registerAssetBundle(TreeViewAsset::className());
+        $tvScrollTop = (int) Yii::$app->session['tvScrollTop'];
 
-        $moveAction = Url::toRoute('tree/move');
-        $scrollTop = (int) Yii::$app->session['treeViewScrollTop'];
-
-        $this->view->registerJs("!(function() {
-            var jqTree = jQuery('#{$this->id}-tree'),
-                jqDetail = jQuery('#{$this->id}-detail')
-
-            jqTree.scrollTop({$scrollTop})
-
-            // cut button
-            var btnCut = jQuery('#{$this->id}-toolbar').find('.kv-cut')
-            btnCut.on('click', function() {
-                this.disabled = true
-
-                // remove tooltip
-                this.nextSibling.remove()
-                this.dataset.clipnode = jQuery('#{$this->id}')[0].dataset.clipnode
-
-//                BootstrapDialog.alert({
-//                    message: 'Select folder to paste',
-//                    size: 'size-small',
-//                    closable: true
-//                })
-            })
-
-            jQuery('#{$this->id}').on('treeview.beforeselect', function(event, key, jqXHR, settings) {
-                this.dataset.clipnode = key
-
-                if (btnCut[0].dataset.clipnode > 0) {
-                    move(btnCut[0].dataset.clipnode, key)
-                    btnCut[0].dataset.clipnode = null
-                }
-            })
-
-            jQuery('#{$this->id}').on('treeview.selected', function(event, key, jqXHR, settings) {
-                var jqForm = jQuery('#{$this->id}-nodeform')
-                var scrollTop = jQuery('#{$this->id}-tree').scrollTop()
-                jqForm.prepend('<input name=treeViewScrollTop value='+ scrollTop +' type=hidden>')
-            })
-
-            function move(from, to) {
-                var jqNodeFrom = jqTree.find('li[data-key='+ from +']'),
-                    jqNodeTo = jqTree.find('li[data-key='+ to +']'),
-                    dir = 'any'
-                $.ajax({
-                    type: 'post',
-                    dataType: 'json',
-                    data: {
-                        'idFrom': jqNodeFrom.data('key'),
-                        'idTo': jqNodeTo.data('key'),
-                        'modelClass': 'app\\\\ext\\\\tree\\\\Node',
-                        'dir': dir,
-                        'allowNewRoots': 1,
-                        'treeMoveHash': jQuery('input[name=treeMoveHash]').val(),
-                        'treeViewScrollTop': jQuery('#{$this->id}-tree').scrollTop()
-                    },
-                    url: '{$moveAction}',
-                    beforeSend: function (jqXHR, settings) {
-                        jqTree.parent().addClass('kv-loading-search');
-                    },
-                    success: function (data, textStatus, jqXHR) {
-                        if (data.status === 'success') {
-                            if (jqNodeTo.find('li').length > 0) {
-                                jqNodeTo.children('ul').append(jqNodeFrom);
-                            } else {
-                                jqNodeTo.addClass('kv-parent');
-                                jQuery(document.createElement('ul')).appendTo(jqNodeTo).append(jqNodeFrom);
-                            }
-
-                            (jqDetail.length > 0) && showAlert(data.out, 'success');
-                            jqTree.find('li.kv-collapsed').each(function() {
-                                if ($(this).has(jqNodeFrom).length > 0) {
-                                    $(this).removeClass('kv-collapsed');
-                                }
-                            })
-                        }
-
-                        (jqDetail.length > 0) && showAlert(data.out, 'danger');
-                        jqTree.parent().removeClass('kv-loading-search');
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        (jqDetail.length > 0) && showAlert(errorThrown, 'danger');
-                        jqTree.parent().removeClass('kv-loading-search');
-                    },
-                });
-            }
-
-            function showAlert(msg, type, cb) {
-                var dur = jQuery.fn.treeview.defaults.alertFadeDuration,
-                    alert = jqDetail.find('.alert-' + type);
-
-                jqDetail.find('.alert').addClass('hide');
-                jqDetail.find('.kv-select-node-msg').remove();
-                alert.removeClass('hide').hide().find('div').remove();
-                alert.append('<div>' + msg + '</div>').fadeIn(dur, function () {
-                    cb && setTimeout(function() {alert.fadeOut(dur, cb())}, dur * 2)
-                })
-            }
-        })()");
+        $this->view->registerJs("
+            jQuery('#{$this->id}-nodeform')
+                .prepend('<input name=tvScrollTop value=$tvScrollTop type=hidden>')
+            jQuery('#{$this->id}-tree').scrollTop($tvScrollTop)
+            jQuery('#{$this->id}').data('moveAction', '{$this->actions['move']}')
+        ");
     }
 
     public function renderTree() {
@@ -157,6 +70,7 @@ class TreeView extends \kartik\tree\TreeView
                     (is_array($label) ? ArrayHelper::getValue($label, $nodeKey, $nodeName)
                                       : $nodeName);
             }
+
             $nodeName = $node->id . ') '.$nodeName;
 
             if (trim($indicators) == null) {
@@ -212,7 +126,7 @@ class TreeView extends \kartik\tree\TreeView
                 "       <span class='kv-node-label'>". $nodeName ."</span>".
                 "   </div>\n".
                 "</div>\n".
-                (!empty($node->children()) ? $this->renderNodes($children) : ''),
+                (!empty($children) ? $this->renderNodes($children) : ''),
             $nodeOptions);
         }
 
