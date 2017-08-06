@@ -7,24 +7,35 @@ use Yii;
 
 class TreeView extends \kartik\tree\TreeView
 {
+    const BTN_CUT = 'cut';
+
     public function init() {
         parent::init();
 
         // controller/action
         $treeMoveRoute = Url::toRoute(Yii::$app->params['treeMoveRoute']);
         $this->view->registerAssetBundle(TreeViewAsset::className());
-        $tvScrollTop = (int) Yii::$app->session['tvScrollTop'];
+
+        $treeViewScrollTop = (int) Yii::$app->session['treeViewScrollTop']
+            or ($treeViewScrollTop = (int) $_COOKIE['treeViewScrollTop']);
 
         $this->view->registerJs("
             jQuery('#{$this->id}-nodeform')
-                .prepend('<input name=tvScrollTop value=$tvScrollTop type=hidden>')
-            jQuery('#{$this->id}-tree').scrollTop($tvScrollTop)
+                .prepend('<input name=treeViewScrollTop value=$treeViewScrollTop type=hidden>')
+            jQuery('#{$this->id}-tree').scrollTop($treeViewScrollTop)
             jQuery.fn.treeview.defaults.actions.move = '$treeMoveRoute'
         ");
+
+        $defaultToolbar = $this->getDefaultToolbar();
+        if (!$this->allowNewRoots) {
+            unset($defaultToolbar[self::BTN_CREATE_ROOT]);
+        }
+        $this->toolbar = \yii\helpers\ArrayHelper::merge($defaultToolbar, $this->toolbar);
+        $this->sortToolbar();
     }
 
     public function renderTree() {
-        $roots = Node::find()->roots()->all();
+        $roots = Tree::find()->roots()->all();
 
         return Html::tag('div',
                 $this->renderRoot().
@@ -128,21 +139,48 @@ class TreeView extends \kartik\tree\TreeView
         return Html::tag('ul', implode('', $items), $options);
     }
 
-    public function renderToolbar() {
-        $_toolbar = $this->toolbar;
-        $this->toolbar = array_slice($_toolbar, 0, 8, true);
-        $this->toolbar += [
-            'cut' => [
+    public function getDefaultToolbar() {
+        return [
+            self::BTN_CREATE => [
+                'icon' => 'plus',
+                'alwaysDisabled' => false, // set this property to `true` to force disable the button always
+                'options' => ['title' => Yii::t('kvtree', 'Add new'), 'disabled' => true],
+            ],
+            self::BTN_CREATE_ROOT => [
+                'icon' => $this->fontAwesome ? 'tree' : 'tree-conifer',
+                'options' => ['title' => Yii::t('kvtree', 'Add new root')],
+            ],
+            self::BTN_REMOVE => [
+                'icon' => 'trash',
+                'options' => ['title' => Yii::t('kvtree', 'Delete'), 'disabled' => true],
+            ],
+            self::BTN_SEPARATOR,
+            self::BTN_MOVE_UP => [
+                'icon' => 'arrow-up',
+                'options' => ['title' => Yii::t('kvtree', 'Move Up'), 'disabled' => true],
+            ],
+            self::BTN_MOVE_DOWN => [
+                'icon' => 'arrow-down',
+                'options' => ['title' => Yii::t('kvtree', 'Move Down'), 'disabled' => true],
+            ],
+            self::BTN_MOVE_LEFT => [
+                'icon' => 'arrow-left',
+                'options' => ['title' => Yii::t('kvtree', 'Move Left'), 'disabled' => true],
+            ],
+            self::BTN_MOVE_RIGHT => [
+                'icon' => 'arrow-right',
+                'options' => ['title' => Yii::t('kvtree', 'Move Right'), 'disabled' => true],
+            ],
+            self::BTN_CUT => [
                 'icon' => 'move',
                 'options' => ['title' => Yii::t('app', 'Cut'), 'disabled' => true]
             ],
-//            'paste' => [
-//                'icon' => 'paste',
-//                'options' => ['title' => Yii::t('app', 'Paste'), 'disabled' => true]
-//            ]
+            self::BTN_SEPARATOR,
+            self::BTN_REFRESH => [
+                'icon' => 'refresh',
+                'options' => ['title' => Yii::t('kvtree', 'Refresh')],
+                'url' => Yii::$app->request->url,
+            ],
         ];
-        $this->toolbar += array_slice($_toolbar, -2, 3, true);
-
-        return parent::renderToolbar();
     }
 }

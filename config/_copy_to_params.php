@@ -9,6 +9,6 @@ return [
      *
      * See: controllers/TreeController::actions()
      */
-    'treeMoveRoute' => 'tree/move',
+    'treeMoveRoute' => 'organization/move-tree',
     'treeTable' => 'tbl_tree',
 ];

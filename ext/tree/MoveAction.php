@@ -4,11 +4,11 @@ namespace app\ext\tree;
 class MoveAction extends \yii\base\Action
 {
     public function run() {
-        $dir = $idTo = $idFrom = $treeMoveHash = '';
+        $idTo = $idFrom = '';
         extract(\Yii::$app->request->post());
 
-        $nodeFrom = Node::findOne($idFrom);
-        $nodeTo = Node::findOne($idTo);
+        $nodeFrom = Tree::findOne($idFrom);
+        $nodeTo = Tree::findOne($idTo);
         $nodeFrom->appendTo($nodeTo);
 
         \Yii::$app->response->format = 'json';

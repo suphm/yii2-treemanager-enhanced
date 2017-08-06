@@ -19,7 +19,7 @@
 
   $('#' + __tvId).on('treeview.beforeselect',
     function(event, key, jqXhr, xhrSettings) {
-      console.log(arguments)
+      document.cookie = 'treeViewScrollTop='+ $tree.scrollTop()
       $(this).data('clipNode', key)
       if ($btnCut.data('clipNode') > 0) {
               move($btnCut.data('clipNode'), key)
@@ -30,7 +30,7 @@
   $('#'+ __tvId).on('treeview.selected', function(event, key, data, success, jqXhr) {
       var $form = $('#' + __tvId + '-nodeform')
       var scrollTop = $tree.scrollTop()
-      $form.prepend('<input name=tvScrollTop value='+ scrollTop +' type=hidden>')
+      $form.prepend('<input name=treeViewScrollTop value='+ scrollTop +' type=hidden>')
       $('#'+ __tv.detailId +' .alert').css('display', 'none').removeClass('hide')
   })
 
@@ -44,10 +44,10 @@
       data: {
         'idFrom': $nodeFrom.data('key'),
         'idTo': $nodeTo.data('key'),
-        'modelClass': 'app\\\\ext\\\\tree\\\\Node',
-        'dir': dir,
-        'allowNewRoots': 1,
-        'treeMoveHash': $('input[name=treeMoveHash]').val(),
+//        'modelClass': 'app\\\\ext\\\\tree\\\\Tree',
+//        'dir': dir,
+//        'allowNewRoots': 1,
+//        'treeMoveHash': $('input[name=treeMoveHash]').val(),
         'tvScrollTop': $tree.scrollTop()
       },
       url: $.fn.treeview.defaults.actions.move,
